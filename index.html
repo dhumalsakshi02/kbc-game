@@ -1,118 +1,153 @@
-# Writing the Python GUI code for KBC Game with Tkinter
+<!DOCTYPE html>
+<html>
+<head>
+  <title>KBC Game with Lifeline</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+      background-color: #f8f9fa;
+    }
+    h1 {
+      color: #333;
+    }
+    #question {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+    .option-btn {
+      display: block;
+      margin: 10px auto;
+      padding: 10px 20px;
+      width: 220px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .option-btn:hover {
+      background-color: #0056b3;
+    }
+    #lifeline {
+      margin: 20px auto;
+      padding: 8px 16px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #lifeline:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
 
-kbc_code = """
-import tkinter as tk
-from tkinter import messagebox
-import random
+  <h1>🎮 KBC Game with Lifeline</h1>
 
-# Questions, options, and correct answers
-questions = [
-    ("What is the capital of India?", ["Mumbai", "Chennai", "Delhi", "Kolkata"], "Delhi"),
-    ("Which planet is known as the Red Planet?", ["Earth", "Mars", "Jupiter", "Saturn"], "Mars"),
-    ("Who wrote the Indian National Anthem?", ["Tagore", "Gandhi", "Nehru", "Patel"], "Tagore"),
-    ("What is the currency of Japan?", ["Yuan", "Won", "Yen", "Dollar"], "Yen"),
-]
+  <div id="question">Loading...</div>
 
-# Shuffle questions
-random.shuffle(questions)
+  <button class="option-btn" onclick="checkAnswer(this)" id="option1"></button>
+  <button class="option-btn" onclick="checkAnswer(this)" id="option2"></button>
+  <button class="option-btn" onclick="checkAnswer(this)" id="option3"></button>
+  <button class="option-btn" onclick="checkAnswer(this)" id="option4"></button>
 
-class KBCGame:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("KBC Game")
-        self.q_index = 0
-        self.score = 0
-        self.used_5050 = False
-        self.used_skip = False
-        self.used_poll = False
+  <br>
+  <button id="lifeline" onclick="useLifeline()">🛟 50:50 Lifeline</button>
 
-        self.question_label = tk.Label(root, text="", font=("Arial", 14), wraplength=500, justify="center")
-        self.question_label.pack(pady=20)
+  <div id="result"></div>
 
-        self.options = []
-        for i in range(4):
-            btn = tk.Button(root, text="", width=40, font=("Arial", 12), command=lambda i=i: self.check_answer(i))
-            btn.pack(pady=5)
-            self.options.append(btn)
+  <script>
+    const questions = [
+      {
+        question: "Who is the Prime Minister of India?",
+        options: ["Narendra Modi", "Amit Shah", "Manmohan Singh", "Rahul Gandhi"],
+        answer: "Narendra Modi"
+      },
+      {
+        question: "Which planet is known as the Red Planet?",
+        options: ["Earth", "Mars", "Jupiter", "Venus"],
+        answer: "Mars"
+      },
+      {
+        question: "What is the capital of Maharashtra?",
+        options: ["Nagpur", "Mumbai", "Pune", "Nashik"],
+        answer: "Mumbai"
+      }
+    ];
 
-        self.lifeline_frame = tk.Frame(root)
-        self.lifeline_frame.pack(pady=10)
-        self.btn_5050 = tk.Button(self.lifeline_frame, text="50:50", command=self.use_5050)
-        self.btn_5050.grid(row=0, column=0, padx=10)
-        self.btn_poll = tk.Button(self.lifeline_frame, text="Audience Poll", command=self.use_poll)
-        self.btn_poll.grid(row=0, column=1, padx=10)
-        self.btn_skip = tk.Button(self.lifeline_frame, text="Skip", command=self.use_skip)
-        self.btn_skip.grid(row=0, column=2, padx=10)
+    let currentQuestion = 0;
+    let usedLifeline = false;
 
-        self.load_question()
+    function loadQuestion() {
+      const q = questions[currentQuestion];
+      document.getElementById("question").innerText = q.question;
+      for (let i = 0; i < 4; i++) {
+        document.getElementById(`option${i+1}`).style.display = "block";
+        document.getElementById(`option${i+1}`).innerText = q.options[i];
+        document.getElementById(`option${i+1}`).disabled = false;
+      }
+      document.getElementById("result").innerText = "";
+      document.getElementById("lifeline").disabled = usedLifeline;
+    }
 
-    def load_question(self):
-        if self.q_index >= len(questions):
-            messagebox.showinfo("Game Over", f"Your final score is: {self.score}")
-            self.root.quit()
-            return
+    function checkAnswer(button) {
+      const selected = button.innerText;
+      const correct = questions[currentQuestion].answer;
+      if (selected === correct) {
+        document.getElementById("result").innerText = "✅ Correct!";
+      } else {
+        document.getElementById("result").innerText = "❌ Wrong! Correct answer: " + correct;
+      }
+      disableOptions();
 
-        self.current_question, self.current_options, self.correct_answer = questions[self.q_index]
-        self.question_label.config(text=f"Q{self.q_index+1}: {self.current_question}")
-        for i in range(4):
-            self.options[i].config(text=self.current_options[i], state="normal", bg="SystemButtonFace")
-        self.restore_buttons()
+      currentQuestion++;
+      setTimeout(() => {
+        if (currentQuestion < questions.length) {
+          loadQuestion();
+        } else {
+          document.getElementById("question").innerText = "🎉 Game Over! Thanks for playing.";
+          for (let i = 1; i <= 4; i++) {
+            document.getElementById("option" + i).style.display = "none";
+          }
+          document.getElementById("lifeline").style.display = "none";
+        }
+      }, 2000);
+    }
 
-    def check_answer(self, index):
-        selected = self.options[index]["text"]
-        if selected == self.correct_answer:
-            self.score += 10
-            messagebox.showinfo("Correct", "That's the correct answer!")
-        else:
-            messagebox.showinfo("Wrong", f"Wrong answer! Correct was: {self.correct_answer}")
-        self.q_index += 1
-        self.load_question()
+    function disableOptions() {
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById("option" + i).disabled = true;
+      }
+    }
 
-    def use_5050(self):
-        if self.used_5050:
-            messagebox.showinfo("Used", "You have already used 50:50 lifeline.")
-            return
-        self.used_5050 = True
-        correct = self.correct_answer
-        others = [opt for opt in self.current_options if opt != correct]
-        to_remove = random.sample(others, 2)
-        for btn in self.options:
-            if btn["text"] in to_remove:
-                btn.config(state="disabled")
+    function useLifeline() {
+      const correct = questions[currentQuestion].answer;
+      let hidden = 0;
+      for (let i = 1; i <= 4; i++) {
+        const btn = document.getElementById("option" + i);
+        if (btn.innerText !== correct && hidden < 2) {
+          btn.style.display = "none";
+          hidden++;
+        }
+      }
+      usedLifeline = true;
+      document.getElementById("lifeline").disabled = true;
+    }
 
-    def use_poll(self):
-        if self.used_poll:
-            messagebox.showinfo("Used", "You have already used Audience Poll lifeline.")
-            return
-        self.used_poll = True
-        poll_result = [random.randint(10, 30) for _ in range(4)]
-        correct_idx = self.current_options.index(self.correct_answer)
-        poll_result[correct_idx] = max(poll_result) + 20
-        poll_msg = "\\n".join([f"{self.current_options[i]}: {poll_result[i]}%" for i in range(4)])
-        messagebox.showinfo("Audience Poll", poll_msg)
+    loadQuestion();
+  </script>
 
-    def use_skip(self):
-        if self.used_skip:
-            messagebox.showinfo("Used", "You have already used Skip Question lifeline.")
-            return
-        self.used_skip = True
-        messagebox.showinfo("Skipped", f"Skipping question! Correct was: {self.correct_answer}")
-        self.q_index += 1
-        self.load_question()
-
-    def restore_buttons(self):
-        for btn in self.options:
-            btn.config(state="normal")
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    game = KBCGame(root)
-    root.mainloop()
-"""
-
-# Save the code to a .py file
-code_path = "/mnt/data/kbc_game_gui.py"
-with open(code_path, "w") as f:
-    f.write(kbc_code)
-
-code_path
+</body>
+</html>
