@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>KBC Game</title>
+</head>
+<body>
+  <h1>Welcome to KBC Game</h1>
+  <div id="question-container">
+    <p id="question">Question will appear here</p>
+    <button onclick="checkAnswer(this)" id="option1"></button>
+    <button onclick="checkAnswer(this)" id="option2"></button>
+    <button onclick="checkAnswer(this)" id="option3"></button>
+    <button onclick="checkAnswer(this)" id="option4"></button>
+  </div>
+
+  <p id="result"></p>
+
+  <script>
+    const questions = [
+      {
+        question: "Who is the Prime Minister of India?",
+        options: ["Narendra Modi", "Rahul Gandhi", "Manmohan Singh", "Amit Shah"],
+        answer: "Narendra Modi"
+      },
+      {
+        question: "What is the capital of Maharashtra?",
+        options: ["Mumbai", "Pune", "Nagpur", "Nashik"],
+        answer: "Mumbai"
+      }
+    ];
+
+    let current = 0;
+
+    function loadQuestion() {
+      const q = questions[current];
+      document.getElementById("question").innerText = q.question;
+      document.getElementById("option1").innerText = q.options[0];
+      document.getElementById("option2").innerText = q.options[1];
+      document.getElementById("option3").innerText = q.options[2];
+      document.getElementById("option4").innerText = q.options[3];
+      document.getElementById("result").innerText = "";
+    }
+
+    function checkAnswer(button) {
+      const selected = button.innerText;
+      if (selected === questions[current].answer) {
+        document.getElementById("result").innerText = "✅ Correct!";
+      } else {
+        document.getElementById("result").innerText = "❌ Wrong answer.";
+      }
+      current++;
+      if (current < questions.length) {
+        setTimeout(loadQuestion, 1000);
+      } else {
+        setTimeout(() => {
+          document.getElementById("question-container").innerHTML = "<h2>Game Over</h2>";
+        }, 1500);
+      }
+    }
+
+    loadQuestion();
+  </script>
+</body>
+</html>
