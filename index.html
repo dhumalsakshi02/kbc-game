@@ -1,164 +1,151 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>KBC Game with Lifeline</title>
+  <title>KBC Game</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f0f0f0;
+      font-family: Arial, sans-serif;
+      background-color: #001f3f;
+      color: white;
       text-align: center;
+      padding: 40px;
+    }
+    .question-box {
+      background: #003366;
+      border-radius: 10px;
       padding: 30px;
+      max-width: 600px;
+      margin: auto;
     }
-    h1 {
-      color: #2c3e50;
-    }
-    #question {
-      font-size: 22px;
-      margin-bottom: 20px;
-      color: #333;
-    }
-    .option-btn {
-      display: block;
-      width: 60%;
-      margin: 10px auto;
+    .option {
+      background-color: #0074D9;
+      margin: 10px;
       padding: 10px;
-      font-size: 18px;
+      border-radius: 5px;
+      cursor: pointer;
+      color: white;
+    }
+    .option:hover {
+      background-color: #005fa3;
+    }
+    .lifeline-btn {
+      margin: 10px;
+      padding: 10px 15px;
+      background-color: #FF851B;
       border: none;
-      border-radius: 6px;
-      background-color: #3498db;
       color: white;
       cursor: pointer;
-      transition: 0.3s;
+      border-radius: 5px;
     }
-    .option-btn:hover {
-      background-color: #2980b9;
-    }
-    #lifeline {
+    button {
       margin-top: 20px;
       padding: 10px 20px;
-      background-color: #27ae60;
-      color: white;
       font-size: 16px;
-      border: none;
-      border-radius: 6px;
       cursor: pointer;
     }
-    #lifeline:disabled {
-      background-color: #95a5a6;
-      cursor: not-allowed;
-    }
-    #result {
-      margin-top: 20px;
-      font-size: 20px;
-      font-weight: bold;
+    #poll {
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
 
-  <h1>🎯 KBC Game</h1>
+  <div class="question-box">
+    <h2 id="question">Loading...</h2>
+    <div id="options"></div>
+    <p id="money">Money: ₹0</p>
 
-  <div id="question">Loading question...</div>
+    <div>
+      <button class="lifeline-btn" onclick="use5050()">50:50</button>
+      <button class="lifeline-btn" onclick="usePoll()">Audience Poll</button>
+      <button class="lifeline-btn" onclick="usePhone()">Phone a Friend</button>
+      <button class="lifeline-btn" onclick="changeQuestion()">Change Question</button>
+    </div>
 
-  <button class="option-btn" onclick="checkAnswer(this)" id="option1"></button>
-  <button class="option-btn" onclick="checkAnswer(this)" id="option2"></button>
-  <button class="option-btn" onclick="checkAnswer(this)" id="option3"></button>
-  <button class="option-btn" onclick="checkAnswer(this)" id="option4"></button>
+    <button onclick="submitAnswer()">Submit Answer</button>
+    <button onclick="quitGame()">Quit Game</button>
 
-  <button id="lifeline" onclick="useLifeline()">🛟 50:50 Lifeline</button>
-
-  <div id="result"></div>
+    <div id="poll"></div>
+  </div>
 
   <script>
-    const questions = [
+    let QUESTIONS = [
       {
-        question: "Who is the Prime Minister of India?",
-        options: ["Narendra Modi", "Amit Shah", "Manmohan Singh", "Rahul Gandhi"],
-        answer: "Narendra Modi"
+        question: "What is the capital of Japan?",
+        options: ["Beijing", "Seoul", "Tokyo", "Bangkok"],
+        answer: 2,
+        money: 1000
       },
       {
-        question: "Which is the largest continent?",
-        options: ["Africa", "Asia", "Europe", "Australia"],
-        answer: "Asia"
+        question: "Who invented the telephone?",
+        options: ["Alexander Graham Bell", "Newton", "Einstein", "Edison"],
+        answer: 0,
+        money: 2000
       },
       {
-        question: "What is the capital of Maharashtra?",
-        options: ["Pune", "Mumbai", "Nagpur", "Nashik"],
-        answer: "Mumbai"
+        question: "Which gas do plants absorb?",
+        options: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"],
+        answer: 1,
+        money: 3000
+      },
+      {
+        question: "Which is the longest river in the world?",
+        options: ["Nile", "Amazon", "Ganga", "Mississippi"],
+        answer: 0,
+        money: 4000
       }
     ];
 
-    let currentQuestion = 0;
-    let usedLifeline = false;
+    let current = 0, money = 0, selected = null;
+    let lifeline5050 = false, lifelinePoll = false, lifelinePhone = false, lifelineChange = false;
 
     function loadQuestion() {
-      const q = questions[currentQuestion];
+      const q = QUESTIONS[current];
       document.getElementById("question").innerText = q.question;
-      document.getElementById("option1").innerText = q.options[0];
-      document.getElementById("option2").innerText = q.options[1];
-      document.getElementById("option3").innerText = q.options[2];
-      document.getElementById("option4").innerText = q.options[3];
+      const options = document.getElementById("options");
+      options.innerHTML = "";
+      document.getElementById("poll").innerHTML = "";
 
-      // Reset visibility & buttons
-      for (let i = 1; i <= 4; i++) {
-        const btn = document.getElementById("option" + i);
-        btn.style.display = "block";
-        btn.disabled = false;
-      }
-
-      document.getElementById("result").innerText = "";
-      usedLifeline = false;
-      document.getElementById("lifeline").disabled = false;
+      q.options.forEach((opt, i) => {
+        const div = document.createElement("div");
+        div.className = "option";
+        div.innerText = opt;
+        div.onclick = () => selectOption(i);
+        div.id = "opt" + i;
+        options.appendChild(div);
+      });
     }
 
-    function checkAnswer(button) {
-      const selected = button.innerText;
-      const correct = questions[currentQuestion].answer;
-
-      if (selected === correct) {
-        document.getElementById("result").innerText = "✅ Correct!";
-      } else {
-        document.getElementById("result").innerText = "❌ Wrong! Correct answer: " + correct;
+    function selectOption(i) {
+      selected = i;
+      for (let j = 0; j < 4; j++) {
+        let o = document.getElementById("opt" + j);
+        if (o) o.style.backgroundColor = "#0074D9";
       }
-
-      for (let i = 1; i <= 4; i++) {
-        document.getElementById("option" + i).disabled = true;
-      }
-
-      setTimeout(() => {
-        currentQuestion++;
-        if (currentQuestion < questions.length) {
-          loadQuestion();
-        } else {
-          document.getElementById("question").innerText = "🎉 Game Over!";
-          for (let i = 1; i <= 4; i++) {
-            document.getElementById("option" + i).style.display = "none";
-          }
-          document.getElementById("lifeline").style.display = "none";
-          document.getElementById("result").innerText = "";
-        }
-      }, 2000);
+      document.getElementById("opt" + i).style.backgroundColor = "#01FF70";
     }
 
-    function useLifeline() {
-      const correct = questions[currentQuestion].answer;
-      let hidden = 0;
-
-      for (let i = 1; i <= 4; i++) {
-        const btn = document.getElementById("option" + i);
-        if (btn.innerText !== correct && hidden < 2) {
-          btn.style.display = "none";
-          hidden++;
+    function use5050() {
+      if (lifeline5050) return alert("Already used!");
+      lifeline5050 = true;
+      const correct = QUESTIONS[current].answer;
+      let removed = 0;
+      for (let i = 0; i < 4 && removed < 2; i++) {
+        if (i !== correct) {
+          document.getElementById("opt" + i).style.display = "none";
+          removed++;
         }
       }
-
-      usedLifeline = true;
-      document.getElementById("lifeline").disabled = true;
     }
 
-    loadQuestion();
-  </script>
-
-</body>
-</html>
+    function usePoll() {
+      if (lifelinePoll) return alert("Already used!");
+      lifelinePoll = true;
+      let pollDiv = document.getElementById("poll");
+      let correct = QUESTIONS[current].answer;
+      let percents = [0, 0, 0, 0];
+      percents[correct] = Math.floor(Math.random() * 30 + 50); // 50-80%
+      let left = 100 - percents[correct];
+      for (let i = 0; i < 4; i++) {
+        if (i !== correct) {
+          percents[i] = Ma
