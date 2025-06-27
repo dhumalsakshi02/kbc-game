@@ -1,89 +1,164 @@
-import tkinter as tk
-from tkinter import messagebox
-from questions import QUESTIONS
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KBC Game with Lifeline</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f0f0;
+      text-align: center;
+      padding: 30px;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    #question {
+      font-size: 22px;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .option-btn {
+      display: block;
+      width: 60%;
+      margin: 10px auto;
+      padding: 10px;
+      font-size: 18px;
+      border: none;
+      border-radius: 6px;
+      background-color: #3498db;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .option-btn:hover {
+      background-color: #2980b9;
+    }
+    #lifeline {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #27ae60;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #lifeline:disabled {
+      background-color: #95a5a6;
+      cursor: not-allowed;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
 
-class KBCGame:
-    def _init_(self, root):
-        self.root = root
-        self.root.title("Kaun Banega Crorepati")
-        self.current_question = 0
-        self.money = 0
-        self.lifeline_used = False
-        self.setup_gui()
-        self.load_question()
+  <h1>🎯 KBC Game</h1>
 
-    def setup_gui(self):
-        # Question Label
-        self.question_label = tk.Label(self.root, text="", font=("Arial", 16), wraplength=600, justify="center")
-        self.question_label.pack(pady=20)
+  <div id="question">Loading question...</div>
 
-        # Option Buttons
-        self.option_buttons = []
-        for i in range(4):
-            btn = tk.Button(self.root, text="", font=("Arial", 14), width=20, command=lambda i=i: self.check_answer(i + 1))
-            btn.pack(pady=5)
-            self.option_buttons.append(btn)
+  <button class="option-btn" onclick="checkAnswer(this)" id="option1"></button>
+  <button class="option-btn" onclick="checkAnswer(this)" id="option2"></button>
+  <button class="option-btn" onclick="checkAnswer(this)" id="option3"></button>
+  <button class="option-btn" onclick="checkAnswer(this)" id="option4"></button>
 
-        # Lifeline and Quit Buttons
-        self.lifeline_button = tk.Button(self.root, text="Lifeline", font=("Arial", 14), command=self.use_lifeline)
-        self.lifeline_button.pack(side="left", padx=20)
+  <button id="lifeline" onclick="useLifeline()">🛟 50:50 Lifeline</button>
 
-        self.quit_button = tk.Button(self.root, text="Quit", font=("Arial", 14), command=self.quit_game)
-        self.quit_button.pack(side="right", padx=20)
+  <div id="result"></div>
 
-        # Money Label
-        self.money_label = tk.Label(self.root, text="Money: 0", font=("Arial", 14))
-        self.money_label.pack(pady=20)
+  <script>
+    const questions = [
+      {
+        question: "Who is the Prime Minister of India?",
+        options: ["Narendra Modi", "Amit Shah", "Manmohan Singh", "Rahul Gandhi"],
+        answer: "Narendra Modi"
+      },
+      {
+        question: "Which is the largest continent?",
+        options: ["Africa", "Asia", "Europe", "Australia"],
+        answer: "Asia"
+      },
+      {
+        question: "What is the capital of Maharashtra?",
+        options: ["Pune", "Mumbai", "Nagpur", "Nashik"],
+        answer: "Mumbai"
+      }
+    ];
 
-    def load_question(self):
-        if self.current_question >= len(QUESTIONS):
-            self.game_over("Congrats!! You answered all the questions correctly!!\nTotal Money Won: {}".format(self.money))
-            return
+    let currentQuestion = 0;
+    let usedLifeline = false;
 
-        question = QUESTIONS[self.current_question]
-        self.question_label.config(text=f"Question {self.current_question + 1}: {question['name']}")
-        self.money_label.config(text=f"Money: {self.money}")
+    function loadQuestion() {
+      const q = questions[currentQuestion];
+      document.getElementById("question").innerText = q.question;
+      document.getElementById("option1").innerText = q.options[0];
+      document.getElementById("option2").innerText = q.options[1];
+      document.getElementById("option3").innerText = q.options[2];
+      document.getElementById("option4").innerText = q.options[3];
 
-        for i in range(4):
-            self.option_buttons[i].config(text=f"Option {i + 1}: {question['option' + str(i + 1)]}", state="normal")
+      // Reset visibility & buttons
+      for (let i = 1; i <= 4; i++) {
+        const btn = document.getElementById("option" + i);
+        btn.style.display = "block";
+        btn.disabled = false;
+      }
 
-    def check_answer(self, selected_option):
-        question = QUESTIONS[self.current_question]
-        correct_answer = question["answer"]
+      document.getElementById("result").innerText = "";
+      usedLifeline = false;
+      document.getElementById("lifeline").disabled = false;
+    }
 
-        if selected_option == correct_answer:
-            messagebox.showinfo("Correct!", "You answered correctly!")
-            self.money += question["money"]
-            self.current_question += 1
-            self.load_question()
-        else:
-            self.game_over(f"Incorrect! The correct answer was Option {correct_answer}.\nMoney Won: {self.money}")
+    function checkAnswer(button) {
+      const selected = button.innerText;
+      const correct = questions[currentQuestion].answer;
 
-    def use_lifeline(self):
-        if self.lifeline_used:
-            messagebox.showwarning("Lifeline Used", "You have already used the lifeline!")
-            return
+      if (selected === correct) {
+        document.getElementById("result").innerText = "✅ Correct!";
+      } else {
+        document.getElementById("result").innerText = "❌ Wrong! Correct answer: " + correct;
+      }
 
-        self.lifeline_used = True
-        question = QUESTIONS[self.current_question]
-        correct_answer = question["answer"]
-        incorrect_options = [1, 2, 3, 4]
-        incorrect_options.remove(correct_answer)
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById("option" + i).disabled = true;
+      }
 
-        # Hide two incorrect options
-        hide_options = incorrect_options[:2]
-        for i in hide_options:
-            self.option_buttons[i - 1].config(text="", state="disabled")
+      setTimeout(() => {
+        currentQuestion++;
+        if (currentQuestion < questions.length) {
+          loadQuestion();
+        } else {
+          document.getElementById("question").innerText = "🎉 Game Over!";
+          for (let i = 1; i <= 4; i++) {
+            document.getElementById("option" + i).style.display = "none";
+          }
+          document.getElementById("lifeline").style.display = "none";
+          document.getElementById("result").innerText = "";
+        }
+      }, 2000);
+    }
 
-    def quit_game(self):
-        self.game_over(f"You chose to quit!\nTotal Money Won: {self.money}")
+    function useLifeline() {
+      const correct = questions[currentQuestion].answer;
+      let hidden = 0;
 
-    def game_over(self, message):
-        messagebox.showinfo("Game Over", message)
-        self.root.destroy()
+      for (let i = 1; i <= 4; i++) {
+        const btn = document.getElementById("option" + i);
+        if (btn.innerText !== correct && hidden < 2) {
+          btn.style.display = "none";
+          hidden++;
+        }
+      }
 
+      usedLifeline = true;
+      document.getElementById("lifeline").disabled = true;
+    }
 
-if _name_ == "_main_":
-    root = tk.Tk()
-    game = KBCGame(root)
-    root.mainloop()
+    loadQuestion();
+  </script>
+
+</body>
+</html>
