@@ -1,151 +1,165 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>KBC Game</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #001f3f;
+      background: #012c52;
       color: white;
       text-align: center;
+      margin-top: 100px;
+    }
+    #gameBox {
+      background: #033b6e;
       padding: 40px;
-    }
-    .question-box {
-      background: #003366;
       border-radius: 10px;
-      padding: 30px;
-      max-width: 600px;
-      margin: auto;
+      display: inline-block;
     }
-    .option {
-      background-color: #0074D9;
+    .option-btn, .lifeline-btn {
       margin: 10px;
-      padding: 10px;
-      border-radius: 5px;
-      cursor: pointer;
-      color: white;
-    }
-    .option:hover {
-      background-color: #005fa3;
-    }
-    .lifeline-btn {
-      margin: 10px;
-      padding: 10px 15px;
-      background-color: #FF851B;
-      border: none;
-      color: white;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-    button {
-      margin-top: 20px;
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
+      border-radius: 5px;
     }
-    #poll {
-      margin-top: 10px;
+    .option-btn {
+      background: #e8e8e8;
+      color: black;
+    }
+    .lifeline-btn {
+      background: #ff7b1a;
+      color: white;
     }
   </style>
 </head>
 <body>
-
-  <div class="question-box">
+  <div id="gameBox">
     <h2 id="question">Loading...</h2>
-    <div id="options"></div>
     <p id="money">Money: ₹0</p>
 
-    <div>
-      <button class="lifeline-btn" onclick="use5050()">50:50</button>
-      <button class="lifeline-btn" onclick="usePoll()">Audience Poll</button>
-      <button class="lifeline-btn" onclick="usePhone()">Phone a Friend</button>
-      <button class="lifeline-btn" onclick="changeQuestion()">Change Question</button>
-    </div>
+    <div id="options"></div>
 
-    <button onclick="submitAnswer()">Submit Answer</button>
-    <button onclick="quitGame()">Quit Game</button>
+    <br>
 
-    <div id="poll"></div>
+    <button class="lifeline-btn" onclick="use5050()">50:50</button>
+    <button class="lifeline-btn" onclick="audiencePoll()">Audience Poll</button>
+    <button class="lifeline-btn" onclick="phoneFriend()">Phone a Friend</button>
+    <button class="lifeline-btn" onclick="changeQuestion()">Change Question</button>
+    
+    <br><br>
+
+    <button class="option-btn" onclick="submitAnswer()">Submit Answer</button>
+    <button class="option-btn" onclick="quitGame()">Quit Game</button>
   </div>
 
   <script>
-    let QUESTIONS = [
+    const QUESTIONS = [
       {
-        question: "What is the capital of Japan?",
-        options: ["Beijing", "Seoul", "Tokyo", "Bangkok"],
-        answer: 2,
+        question: "What is the capital of India?",
+        options: ["Mumbai", "New Delhi", "Kolkata", "Chennai"],
+        answer: 1,
         money: 1000
       },
       {
-        question: "Who invented the telephone?",
-        options: ["Alexander Graham Bell", "Newton", "Einstein", "Edison"],
-        answer: 0,
+        question: "Which planet is known as the Red Planet?",
+        options: ["Earth", "Venus", "Mars", "Jupiter"],
+        answer: 2,
         money: 2000
       },
       {
-        question: "Which gas do plants absorb?",
-        options: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"],
+        question: "Who wrote the national anthem of India?",
+        options: ["Bankim Chandra", "Rabindranath Tagore", "Sarojini Naidu", "Bose"],
         answer: 1,
         money: 3000
       },
       {
-        question: "Which is the longest river in the world?",
-        options: ["Nile", "Amazon", "Ganga", "Mississippi"],
-        answer: 0,
-        money: 4000
+        question: "Which is the largest mammal?",
+        options: ["Elephant", "Whale", "Lion", "Shark"],
+        answer: 1,
+        money: 5000
       }
     ];
 
-    let current = 0, money = 0, selected = null;
-    let lifeline5050 = false, lifelinePoll = false, lifelinePhone = false, lifelineChange = false;
+    let current = 0;
+    let money = 0;
+    let selected = null;
+    let lifelines = {
+      "5050": false,
+      "poll": false,
+      "phone": false,
+      "change": false
+    };
 
     function loadQuestion() {
+      if (current >= QUESTIONS.length) {
+        alert("🎉 You've completed the game!\nTotal: ₹" + money);
+        return;
+      }
       const q = QUESTIONS[current];
       document.getElementById("question").innerText = q.question;
-      const options = document.getElementById("options");
-      options.innerHTML = "";
-      document.getElementById("poll").innerHTML = "";
+      document.getElementById("money").innerText = "Money: ₹" + money;
+      selected = null;
 
+      const optionsDiv = document.getElementById("options");
+      optionsDiv.innerHTML = "";
       q.options.forEach((opt, i) => {
-        const div = document.createElement("div");
-        div.className = "option";
-        div.innerText = opt;
-        div.onclick = () => selectOption(i);
-        div.id = "opt" + i;
-        options.appendChild(div);
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerText = opt;
+        btn.onclick = () => {
+          selected = i;
+          document.querySelectorAll('.option-btn').forEach(b => b.style.background = "#e8e8e8");
+          btn.style.background = "#a5e3a5";
+        };
+        optionsDiv.appendChild(btn);
       });
     }
 
-    function selectOption(i) {
-      selected = i;
-      for (let j = 0; j < 4; j++) {
-        let o = document.getElementById("opt" + j);
-        if (o) o.style.backgroundColor = "#0074D9";
+    function submitAnswer() {
+      if (selected === null) {
+        alert("Please select an option.");
+        return;
       }
-      document.getElementById("opt" + i).style.backgroundColor = "#01FF70";
+      if (selected === QUESTIONS[current].answer) {
+        money += QUESTIONS[current].money;
+        current++;
+        alert("✅ Correct!\nYou've won ₹" + money);
+        loadQuestion();
+      } else {
+        alert("❌ Wrong Answer! Game Over.\nTotal Money: ₹" + money);
+        location.reload();
+      }
+    }
+
+    function quitGame() {
+      alert("You chose to quit.\nTotal Money: ₹" + money);
+      location.reload();
     }
 
     function use5050() {
-      if (lifeline5050) return alert("Already used!");
-      lifeline5050 = true;
+      if (lifelines["5050"]) return alert("Lifeline already used!");
+      lifelines["5050"] = true;
+
       const correct = QUESTIONS[current].answer;
-      let removed = 0;
-      for (let i = 0; i < 4 && removed < 2; i++) {
-        if (i !== correct) {
-          document.getElementById("opt" + i).style.display = "none";
-          removed++;
+      const options = document.querySelectorAll('.option-btn');
+      let count = 0;
+      for (let i = 0; i < options.length; i++) {
+        if (i !== correct && count < 2) {
+          options[i].style.display = "none";
+          count++;
         }
       }
     }
 
-    function usePoll() {
-      if (lifelinePoll) return alert("Already used!");
-      lifelinePoll = true;
-      let pollDiv = document.getElementById("poll");
-      let correct = QUESTIONS[current].answer;
-      let percents = [0, 0, 0, 0];
-      percents[correct] = Math.floor(Math.random() * 30 + 50); // 50-80%
-      let left = 100 - percents[correct];
-      for (let i = 0; i < 4; i++) {
-        if (i !== correct) {
-          percents[i] = Ma
+    function audiencePoll() {
+      if (lifelines["poll"]) return alert("Audience Poll already used!");
+      lifelines["poll"] = true;
+      alert("📊 Audience thinks correct option is: " + QUESTIONS[current].options[QUESTIONS[current].answer]);
+    }
+
+    function phoneFriend() {
+      if (lifelines["phone"]) return alert("Already used!");
+      lifelines["phone"] = true;
+      alert("📞
